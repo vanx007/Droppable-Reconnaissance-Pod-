@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRP — Droppable Reconnaissance Pod Mission Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="brand">
+            <div class="pulse-indicator live"></div>
+            <div class="brand-text">
+                <h1>DROPPABLE RECONNAISSANCE POD <span>DRP-ALPHA-01</span></h1>
+                <p>Multi-Modal Search & Rescue Reconnaissance Engine</p>
+            </div>
+        </div>
+        <div class="system-status">
+            <div class="status-badge" id="conn-badge">
+                <span class="status-dot"></span>
+                <span id="conn-text">SIMULATOR ACTIVE</span>
+            </div>
+            <div class="status-badge battery-badge">
+                <span class="battery-icon">🔋</span>
+                <span id="vbat-text">3.92 V (88%)</span>
+            </div>
+            <button id="toggle-sim-btn" class="btn btn-secondary">Sim Mode: ON</button>
+            <button id="export-csv-btn" class="btn btn-primary">Export CSV</button>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <!-- Top Row: Primary Radar Scope & Multi-Modal Confidence Gauge -->
+        <section class="card radar-card">
+            <div class="card-header">
+                <h2>24 GHz POLAR RADAR SCOPE (HLK-LD2410C)</h2>
+                <span class="badge" id="radar-state-badge">NO TARGET</span>
+            </div>
+            <div class="radar-container">
+                <canvas id="radarCanvas" width="480" height="320"></canvas>
+                <div class="radar-overlay-data">
+                    <div class="radar-stat">
+                        <label>TARGET DISTANCE</label>
+                        <span id="stat-dist">-- cm</span>
+                    </div>
+                    <div class="radar-stat">
+                        <label>STATIC ENERGY</label>
+                        <span id="stat-static-energy">-- %</span>
+                    </div>
+                    <div class="radar-stat">
+                        <label>DYNAMIC ENERGY</label>
+                        <span id="stat-moving-energy">-- %</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card confidence-card">
+            <div class="card-header">
+                <h2>FUSED CONFIDENCE ENGINE</h2>
+                <span class="badge" id="classification-badge">CLEAR / NO TARGET</span>
+            </div>
+            <div class="confidence-body">
+                <div class="gauge-container">
+                    <div class="confidence-circle" id="confidenceCircle">
+                        <span id="confidenceValue">0%</span>
+                        <small>PROBABILITY</small>
+                    </div>
+                </div>
+                <div class="confidence-breakdown">
+                    <div class="breakdown-row">
+                        <span>Radar Presence (45%)</span>
+                        <div class="progress-bar"><div id="bar-radar" class="progress-fill" style="width: 0%"></div></div>
+                        <span id="val-radar">0%</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span>CW Doppler Motion (20%)</span>
+                        <div class="progress-bar"><div id="bar-doppler" class="progress-fill" style="width: 0%"></div></div>
+                        <span id="val-doppler">OFF</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span>CO2 Exhalation Gradient (20%)</span>
+                        <div class="progress-bar"><div id="bar-co2" class="progress-fill" style="width: 0%"></div></div>
+                        <span id="val-co2">0%</span>
+                    </div>
+                    <div class="breakdown-row">
+                        <span>Acoustic / Vibration (15%)</span>
+                        <div class="progress-bar"><div id="bar-acoustic" class="progress-fill" style="width: 0%"></div></div>
+                        <span id="val-acoustic">0%</span>
+                    </div>
+                    <div class="breakdown-row orientation-row">
+                        <span>Tilt Penalty Factor ($W_\theta$)</span>
+                        <span id="val-wtheta" class="highlight">1.00 (0.0°)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Middle Row: 3D IMU Pod Orientation & Environmental Telemetry -->
+        <section class="card imu-card">
+            <div class="card-header">
+                <h2>6-AXIS IMU ORIENTATION & TILT (MPU6050)</h2>
+                <span class="badge" id="shock-badge">POST-DROP STABLE</span>
+            </div>
+            <div class="imu-body">
+                <canvas id="imuCanvas" width="300" height="200"></canvas>
+                <div class="imu-stats">
+                    <div class="imu-item">
+                        <label>TILT ANGLE</label>
+                        <span id="imu-tilt">0.0°</span>
+                    </div>
+                    <div class="imu-item">
+                        <label>PITCH</label>
+                        <span id="imu-pitch">0.0°</span>
+                    </div>
+                    <div class="imu-item">
+                        <label>ROLL</label>
+                        <span id="imu-roll">0.0°</span>
+                    </div>
+                    <div class="imu-item">
+                        <label>WEIGHT FACTOR</label>
+                        <span id="imu-weight">1.00</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card env-card">
+            <div class="card-header">
+                <h2>ENVIRONMENTAL & ATMOSPHERIC SENSORS</h2>
+                <span class="badge">LIVE LOGGING</span>
+            </div>
+            <div class="env-grid">
+                <div class="env-box">
+                    <div class="env-icon">🌬️</div>
+                    <div class="env-details">
+                        <label>CARBON DIOXIDE (NDIR)</label>
+                        <div class="env-value" id="env-co2">420 <small>ppm</small></div>
+                        <div class="env-sub" id="env-co2-rate">Rate: +0.00 ppm/s</div>
+                    </div>
+                </div>
+                <div class="env-box">
+                    <div class="env-icon">🌡️</div>
+                    <div class="env-details">
+                        <label>TEMPERATURE</label>
+                        <div class="env-value" id="env-temp">26.5 <small>°C</small></div>
+                        <div class="env-sub">Ambient Baseline</div>
+                    </div>
+                </div>
+                <div class="env-box">
+                    <div class="env-icon">💧</div>
+                    <div class="env-details">
+                        <label>RELATIVE HUMIDITY</label>
+                        <div class="env-value" id="env-humidity">58.2 <small>%</small></div>
+                        <div class="env-sub">No Condensation</div>
+                    </div>
+                </div>
+                <div class="env-box">
+                    <div class="env-icon">🔊</div>
+                    <div class="env-details">
+                        <label>ACOUSTIC VIBRATION</label>
+                        <div class="env-value" id="env-acoustic">32 <small>mV</small></div>
+                        <div class="env-sub" id="env-knocks">Knocks: 0</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom Row: Interactive Test Scenario Controller & Live Console Log -->
+        <section class="card controller-card">
+            <div class="card-header">
+                <h2>SIMULATION & TEST SCENARIO GENERATOR</h2>
+                <span class="badge">TASK 12 PRESETS</span>
+            </div>
+            <div class="scenario-btn-group">
+                <button class="scenario-btn" data-scenario="clear">1. Clear Room (No Target)</button>
+                <button class="scenario-btn" data-scenario="walking">2. Moving Target (Free Air)</button>
+                <button class="scenario-btn" data-scenario="trapped_survivor">3. Trapped Survivor Behind Wall</button>
+                <button class="scenario-btn" data-scenario="rubble_noise">4. Rubble / Debris False Alarm</button>
+                <button class="scenario-btn" data-scenario="tilted_pod">5. Tilted Pod (60° Drop Landing)</button>
+                <button class="scenario-btn" data-scenario="knocking">6. Structure-Borne SOS Tapping</button>
+            </div>
+        </section>
+
+        <section class="card log-card">
+            <div class="card-header">
+                <h2>LIVE TELEMETRY PACKET STREAM</h2>
+                <button id="clear-log-btn" class="btn btn-sm">Clear</button>
+            </div>
+            <div class="terminal" id="terminalLog">
+                <div class="term-line info">[00:00:00] DRP Mission Dashboard Initialized.</div>
+                <div class="term-line info">[00:00:00] Awaiting telemetry from ESP32 / Simulator...</div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Droppable Reconnaissance Pod (DRP) &bull; 2nd-Year Engineering R&D Project &bull; Open-Source SAR Hardware Platform</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
